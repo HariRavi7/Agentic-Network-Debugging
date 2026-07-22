@@ -97,19 +97,18 @@ def scan_ports_between_specified_range(port_min :int,port_max:int,ip_address:str
     A string containing what ports are open and what ports are closed.
     """
     print("Port Scanner Tool is running....")
+    print(f"Scanning from {port_min} to {port_max}")
     open_ports = []
     closed_ports = []
     
     for i in range(port_min,port_max+1):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(0.5)  #timeout before attempting
+                s.settimeout(0.1)  #timeout before attempting
                 result = s.connect_ex((ip_address, i))
                 if result == 0:
-                    print(f"Port {i} is open")
                     open_ports.append(i)
                 else:
-                    print(f"Port {i} is closed")
                     closed_ports.append(i)
         except Exception as e:
             return f"Traceroute error: {e}"
