@@ -138,6 +138,94 @@ def check_tcp(host: str, port: int, timeout: int = 3) -> bool:
     except (socket.timeout, ConnectionRefusedError, OSError):
         return False
 
+import platform
+import subprocess
+
+
+def check_dns_nslookup(domain_name: str) -> bool:
+    """
+    Attempt an NS lookup for a domain name to test whether the DNS
+    server is configured correctly.
+
+    Inputs:
+        domain_name (str): Hostname or IP address of the target.
+
+    Outputs:
+        bool:
+            True if the nslookup command succeeds (return code 0).
+            False if it fails, times out, or errors out.
+    """
+    print(f"Running nslookup for {domain_name}...")
+
+    command = ["nslookup", domain_name]
+
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            print(f"nslookup failed (code {result.returncode}): {result.stderr.strip()}")
+            return False
+
+        print(result.stdout)
+        return True
+
+    except subprocess.TimeoutExpired:
+        print("nslookup timed out after 30 seconds.")
+        return False
+
+    except Exception as e:
+        print(f"nslookup error: {e}")
+        return False
+
+def get_routing_table() -> str:
+    """A tool that retrieves the system routing table.
+
+    This helps determine the default gateway, network routes,
+    and which interface is being used to reach different networks.
+
+    Inputs:
+        None
+
+    Outputs:
+        The routing table as returned by the operating system.
+    """
+
+    print("Routing Table Tool is running.....")
+
+    current_os = platform.system().lower()
+
+    if current_os == "windows":
+        command = ["route", "print"]
+    elif current_os=="darwin": 
+        command = ["netstat", "-rn"]  
+    else:
+        return f"Unsupported operating system: {current_os}"
+
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=10,
+        )
+
+        if result.returncode != 0:
+            return f"Failed to retrieve routing table (code {result.returncode}): {result.stderr.strip()}"
+
+        return result.stdout
+
+    except subprocess.TimeoutExpired:
+        return "Retrieving the routing table timed out after 10 seconds."
+
+    except Exception as e:
+        return f"Routing table error: {e}"
+  
 
 
 root_agent = Agent(
@@ -145,5 +233,4 @@ root_agent = Agent(
     name='NetworkTroubleshooterAgent',
     description='A network troubleshooting agent who can help the users debug network issues.',
     instruction="If a user is having a network issue, he woudld reach out to you. By using your tools, you would do various tool calls and collect information and tell the user where exactly the problem is and make sure you give him proper recommendations to pinpoint where the problem is. # Rules to follow: 1.Make sure that only relevant tool calls with regard to what the user is asking is only being made. No unnecessary tool call are being made.2. Make sure that the output you give is clear and concise with point to point relevant information. and professional so that the user could easily debug the issue.Identify:- Root cause- Most likely cause- Alternative possibilities (if confidence is not high). If the user is asking anything outside networking Reply with I am an AI agent who can assist you with networking tasks only please aske me any network related queries, i would be happy to assist you with it.",
-    tools=[get_ip_address,ping_an_ip_address,traceroute_to_an_ip,scan_ports_between_specified_range,check_tcp]
-)
+    tools=[get_ip_address,ping_an_ip_address,traceroute_to_an_ip,scan_ports_between_specified_range,check_tcp, check_dns_nslookup,get_routing_table])
