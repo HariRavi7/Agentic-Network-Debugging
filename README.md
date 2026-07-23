@@ -19,7 +19,7 @@ The agent is smart about this. It will only call the tools that are relevant to 
 
 ## What tools does it have?
 
-The agent comes with five networking tools built right in:
+The agent comes with seven networking tools built right in:
 
 ### 1. IP Address Resolver
 Takes a domain name like `google.com` and resolves it to all of its IP addresses. This is usually the first step in diagnosing connectivity issues.
@@ -35,6 +35,12 @@ Scans a range of ports on a given IP address and tells you which ones are open a
 
 ### 5. TCP Connectivity Check
 A lightweight check to see if a specific TCP port is reachable on a host. It attempts the three way handshake and returns a simple yes or no answer.
+
+### 6. DNS NS Lookup Tool
+Performs an `nslookup` on a domain name to verify that DNS resolution is working correctly. This helps determine whether the issue is with DNS configuration rather than the target server itself.
+
+### 7. Routing Table Tool
+Retrieves the system's routing table, showing the default gateway, network routes, and which network interface is being used to reach different destinations. This is invaluable when diagnosing gateway or routing misconfiguration issues.
 
 ## What kind of problems can it solve?
 
@@ -69,12 +75,6 @@ pip install google-adk
 
 The main agent code lives in `Network_Troubleshooter_Agent/agent.py`. You can import and run the agent from your own script or interact with it through the ADK interface.
 
-There is also a standalone tool in `tools/domain_resolver.py` that you can run directly if you just want a quick domain to IP lookup:
-
-```
-python tools/domain_resolver.py
-```
-
 ## Project structure
 
 ```
@@ -83,15 +83,12 @@ Agentic-Network-Debugging/
 │   ├── __init__.py              # Makes the folder a Python package
 │   ├── agent.py                 # The main agent with all the tools
 │   └── .gitignore
-├── tools/
-│   └── domain_resolver.py       # A standalone domain resolver utility
-├── TODO.md                      # Track what needs to be done next
 └── README.md                    # You are here
 ```
 
 ## A note about the tools
 
-The tools in the `tools/` folder are standalone utilities that you can use independently. The domain resolver for example is a clean, reusable function that returns data in a simple format. The agent itself has its own set of tools integrated directly into it, so you do not need to worry about wiring anything up manually.
+The agent has all seven tools integrated directly into it, so you do not need to worry about wiring anything up manually. Each tool is a clean, reusable Python function that the agent decides when to call based on your network issue.
 
 ## Why this approach?
 
